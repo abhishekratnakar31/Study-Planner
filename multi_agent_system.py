@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from typing import TypedDict
+from langgraph.graph import StateGraph, END
 
 class AgentState(TypedDict):
     user_input: str
@@ -18,21 +19,19 @@ llm = ChatGroq(
 
 )
 
-def planner_agent(state, llm):
+def planner_agent(state):
     prompt = f""" 
     A user wants to study :{state['user_input']}
 
     Break this into key learning topics.
-    Return only a list of topics
     """
 
     response = llm.invoke(prompt)
 
-    state["topics"] = response.content
-    return state
+    return {"topics": response.content}
 
 
-def resource_agent(state, llm):
+def resource_agent(state):
 
     prompt = f"""
     Topics: 
@@ -42,11 +41,10 @@ def resource_agent(state, llm):
     """
 
     response = llm.invoke(prompt)
-    state["resources"] = response.content
-    return state
+    return {"resources": response.content}
 
 
-def schedule_agent(state, llm):
+def schedule_agent(state):
     prompt = f"""
     Topics:
     {state['topics']}
@@ -55,12 +53,10 @@ def schedule_agent(state, llm):
     """
 
     response = llm.invoke(prompt)
-    state["schedule"] = response.content
-
-    return state
+    return {"schedule": response.content}
 
 
-def reviewer_agent(state, llm):
+def reviewer_agent(state):
     prompt = f"""
     Study Schedule:
     {state['schedule']}
@@ -70,8 +66,24 @@ def reviewer_agent(state, llm):
     """
 
     response = llm.invoke(prompt)
-    state["final_plan"] = response.content
-    return state
+    return {"final_plan": response.content}
+
+
+workflow = StateGraph(AgentState)
+
+workflow.add_node("planner", planner_agent)
+workflow.add_node("resource", resource_agent)
+workflow.add_node("schedule", schedule_agent)
+workflow.add_node("reviewer", reviewer_agent)
+
+workflow.add_edge("planner", "resource")
+workflow.add_edge("resource", "schedule")
+workflow.add_edge("schedule", "reviewer")
+workflow.add_edge("reviewer", END)
+
+workflow.set_entry_point("planner")
+
+app = workflow.compile()
     
 
 def main():
@@ -84,13 +96,10 @@ def main():
         "final_plan": ""
     }
 
-    state = planner_agent(state, llm)
-    state = resource_agent(state, llm)
-    state = schedule_agent(state, llm)
-    state = reviewer_agent(state, llm)
+    result = app.invoke(state)
 
     print("\nFinal Study Plan:\n")
-    print(state["final_plan"])
+    print(result["final_plan"])
 
 if __name__ == "__main__":
     main()
