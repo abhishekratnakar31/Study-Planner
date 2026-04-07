@@ -20,10 +20,17 @@ llm = ChatGroq(
 )
 
 def planner_agent(state):
+    print("\nRunning Planner Agent...")
     prompt = f""" 
+    you are a learning planner
     A user wants to study :{state['user_input']}
 
     Break this into key learning topics.
+
+    Rules:
+    - Return only numbered list
+    - Keep topics concise
+    - 5-8 topics maximum
     """
 
     response = llm.invoke(prompt)
@@ -31,13 +38,19 @@ def planner_agent(state):
     return {"topics": response.content}
 
 
-def resource_agent(state):
 
+def resource_agent(state):
+    print("\nRunning Resource Agent...")
     prompt = f"""
     Topics: 
     {state['topics']}
 
-    Find study resources for these topics.
+    Suggest good learning resources
+
+    Rules:
+    - Provide 2-3 resources per topic
+    - Prefer official documentation, tutorials, and well-known platforms
+    - Keep answers short
     """
 
     response = llm.invoke(prompt)
@@ -45,11 +58,18 @@ def resource_agent(state):
 
 
 def schedule_agent(state):
+
+    print("\nRunning Schedule Agent...")
     prompt = f"""
     Topics:
     {state['topics']}
 
-    Create a day-by-day schedule for these topics
+    Create a daily learning schedule
+
+    Rules:
+    - Use Day 1, Day2 format
+    - Cover all topics
+    - Keep tasks short
     """
 
     response = llm.invoke(prompt)
@@ -57,12 +77,26 @@ def schedule_agent(state):
 
 
 def reviewer_agent(state):
+    print("\nRunning Reviewer Agent...")
     prompt = f"""
-    Study Schedule:
+
+    Create a final study plan.
+    Topics:
+    {state['topics']}
+
+    Schedule:
     {state['schedule']}
 
     Resources:
     {state['resources']}
+    Format the output clearly
+
+    Structure:
+    Title
+    Daily Schedule
+    Learning Resources
+
+    Make it easy to read and understand
     """
 
     response = llm.invoke(prompt)
@@ -97,8 +131,9 @@ def main():
     }
 
     result = app.invoke(state)
-
-    print("\nFinal Study Plan:\n")
+    print("\n==============================")
+    print("FINAL STUDY PLAN")
+    print("==============================\n")
     print(result["final_plan"])
 
 if __name__ == "__main__":
