@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study Planner | Minimalist Blueprint</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-white: #ffffff;
+            --text-black: #000000;
+            --border-black: #1a1a1a;
+            --accent-light: #f4f4f5;
+            --transition-swift: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-white);
+            color: var(--text-black);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: block;
+        }
+
+        /* --- Layout --- */
+
+        .main-content {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            position: relative;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--text-black);
+            padding-bottom: 1rem;
+            margin-bottom: 5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .logo-top {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            text-transform: uppercase;
+        }
+
+        .user-tag {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- Command Center --- */
+
+        .command-center {
+            margin-bottom: 6rem;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -2px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            font-weight: 400;
+            max-width: 600px;
+            margin-bottom: 3.5rem;
+            border-left: 4px solid var(--text-black);
+            padding-left: 1.5rem;
+        }
+
+        .input-wrapper {
+            display: flex;
+            border: 2px solid var(--text-black);
+            background: var(--bg-white);
+            transition: var(--transition-swift);
+        }
+
+        .input-wrapper:focus-within {
+            box-shadow: 8px 8px 0px var(--text-black);
+            transform: translate(-4px, -4px);
+        }
+
+        input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            padding: 1.25rem 2rem;
+            font-size: 1.2rem;
+            font-weight: 500;
+            outline: none;
+            color: var(--text-black);
+        }
+
+        .architect-btn {
+            background: var(--text-black);
+            color: var(--bg-white);
+            border: none;
+            padding: 0 2.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: var(--transition-swift);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .architect-btn:hover {
+            background: #333;
+        }
+
+        /* --- Blueprint Modules --- */
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0;
+            border: 2px solid var(--text-black);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: var(--transition-swift);
+        }
+
+        .modules-grid.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .module-card {
+            padding: 2.5rem;
+            border: 1px solid var(--text-black);
+            position: relative;
+            background: var(--bg-white);
+            transition: var(--transition-swift);
+        }
+
+        .module-card:hover {
+            background: var(--accent-light);
+        }
+
+        .module-card.full-width {
+            grid-column: span 2;
+            border-top: 2px solid var(--text-black);
+        }
+
+        .module-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .module-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: var(--text-black);
+            color: var(--bg-white);
+            padding: 0.25rem 0.5rem;
+        }
+
+        .module-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .content-area {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            font-weight: 400;
+            white-space: pre-wrap;
+        }
+
+        /* --- Micro-Animations --- */
+
+        .slide-reveal {
+            position: absolute;
+            inset: 0;
+            background: var(--text-black);
+            transform: translateX(-100%);
+            z-index: 10;
+            display: none;
+        }
+
+        .loading .slide-reveal {
+            display: block;
+            animation: slideInOut 2s infinite cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        @keyframes slideInOut {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(0); }
+            100% { transform: translateX(100%); }
+        }
+
+        .shimmer {
+            height: 1.2rem;
+            width: 100%;
+            background: var(--accent-light);
+            margin-bottom: 0.75rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* --- Responsive --- */
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .modules-grid { grid-template-columns: 1fr; }
+            .module-card.full-width { grid-column: span 1; }
+            .input-wrapper { flex-direction: column; }
+            .architect-btn { padding: 1.25rem; width: 100%; justify-content: center; }
+        }
+
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body>
+
+    <main class="main-content">
+        <header class="header">
+            <div class="logo-top">STUDY.BLUEPRINT</div>
+            <div class="user-tag">Agent Version 3.0</div>
+        </header>
+
+        <section class="command-center">
+            <h1>Structure <br> Knowledge.</h1>
+            <p class="subtitle">Deploy 4 specialized AI agents to generate structured, high-intensity learning roadmaps. Monochromatic. Focused. Precise.</p>
+            
+            <div class="input-wrapper">
+                <input type="text" id="goalInput" placeholder="Define your study objective..." autofocus>
+                <button class="architect-btn" id="generateBtn" onclick="generatePlan()">
+                    Architect <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Loading State -->
+        <div id="loading" class="modules-grid hidden">
+            <div class="module-card loading">
+                <div class="slide-reveal"></div>
+                <div class="shimmer" style="width: 40%"></div>
+                <div class="shimmer" style="width: 90%"></div>
+                <div class="shimmer" style="width: 70%"></div>
+            </div>
+            <div class="module-card loading">
+                <div class="slide-reveal"></div>
+                <div class="shimmer" style="width: 30%"></div>
+                <div class="shimmer" style="width: 80%"></div>
+                <div class="shimmer" style="width: 60%"></div>
+            </div>
+            <div class="module-card full-width loading">
+                <div class="slide-reveal"></div>
+                <div class="shimmer" style="width: 20%"></div>
+                <div class="shimmer" style="width: 95%"></div>
+                <div class="shimmer" style="width: 85%"></div>
+            </div>
+        </div>
+
+        <!-- Result Modules -->
+        <div id="results" class="modules-grid">
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-label">Phase 01</div>
+                </div>
+                <div class="module-title">Key Topics</div>
+                <div id="topicsContent" class="content-area"></div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-label">Phase 02</div>
+                </div>
+                <div class="module-title">Elite Resources</div>
+                <div id="resourcesContent" class="content-area"></div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-label">Phase 03</div>
+                </div>
+                <div class="module-title">Execution Schedule</div>
+                <div id="scheduleContent" class="content-area"></div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-label">Phase 04</div>
+                </div>
+                <div class="module-title">Agent Review</div>
+                <div id="reviewContent" class="content-area">Output verified by multi-agent consensus. Ready for tactical execution.</div>
+            </div>
+
+            <div class="module-card full-width">
+                <div class="module-header">
+                    <div class="module-label">Final Output</div>
+                </div>
+                <div class="module-title" style="font-size: 2rem">Consolidated Roadmap</div>
+                <div id="finalContent" class="content-area" style="font-size: 1.2rem; margin-top: 2rem"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function generatePlan() {
+            const goal = document.getElementById('goalInput').value;
+            if (!goal) return document.getElementById('goalInput').focus();
+
+            const resultsDiv = document.getElementById('results');
+            const loadingDiv = document.getElementById('loading');
+            const btn = document.getElementById('generateBtn');
+            
+            resultsDiv.classList.add('hidden');
+            loadingDiv.classList.remove('hidden');
+            btn.disabled = true;
+            btn.innerHTML = 'Orchestrating...';
+
+            try {
+                const response = await fetch('http://localhost:8000/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ goal: goal }),
+                });
+
+                if (!response.ok) throw new Error('API Error');
+
+                const data = await response.json();
+
+                // Intentional delay for animation visual
+                setTimeout(() => {
+                    document.getElementById('topicsContent').innerText = data.topics || "...";
+                    document.getElementById('resourcesContent').innerText = data.resources || "...";
+                    document.getElementById('scheduleContent').innerText = data.schedule || "...";
+                    document.getElementById('finalContent').innerText = data.final_plan || "...";
+
+                    loadingDiv.classList.add('hidden');
+                    resultsDiv.classList.add('visible');
+                    resultsDiv.classList.remove('hidden');
+                    
+                    btn.disabled = false;
+                    btn.innerHTML = 'Architect <i class="fas fa-arrow-right"></i>';
+                }, 1000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert("Agent Offline. Ensure FastAPI server is running.");
+                loadingDiv.classList.add('hidden');
+                btn.disabled = false;
+                btn.innerHTML = 'Architect <i class="fas fa-arrow-right"></i>';
+            }
+        }
+
+        // Enter key shortcut
+        document.getElementById('goalInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') generatePlan();
+        });
+    </script>
+</body>
+</html>

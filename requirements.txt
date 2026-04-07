@@ -44,3 +44,5 @@ uuid_utils==0.14.1
 xxhash==3.6.0
 zstandard==0.25.0
 langchain-groq==0.2.6
+fastapi==0.115.11
+uvicorn==0.34.0

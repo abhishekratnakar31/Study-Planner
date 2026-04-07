@@ -3,6 +3,10 @@ from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from typing import TypedDict
 from langgraph.graph import StateGraph, END
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
 class AgentState(TypedDict):
     user_input: str
@@ -31,6 +35,8 @@ def planner_agent(state):
     - Return only numbered list
     - Keep topics concise
     - 5-8 topics maximum
+    - Do not use markdown bold (**) anywhere.
+
     """
 
     response = llm.invoke(prompt)
@@ -51,6 +57,8 @@ def resource_agent(state):
     - Provide 2-3 resources per topic
     - Prefer official documentation, tutorials, and well-known platforms
     - Keep answers short
+    - Do not use markdown bold (**) anywhere.
+
     """
 
     response = llm.invoke(prompt)
@@ -70,6 +78,8 @@ def schedule_agent(state):
     - Use Day 1, Day2 format
     - Cover all topics
     - Keep tasks short
+    - Do not use markdown bold (**) anywhere.
+
     """
 
     response = llm.invoke(prompt)
@@ -97,6 +107,8 @@ def reviewer_agent(state):
     Learning Resources
 
     Make it easy to read and understand
+    - Do not use markdown bold (**) anywhere.
+
     """
 
     response = llm.invoke(prompt)
@@ -117,10 +129,40 @@ workflow.add_edge("reviewer", END)
 
 workflow.set_entry_point("planner")
 
-app = workflow.compile()
-    
+# Rename consolidated app to avoid conflict with FastAPI app
+planner_workflow = workflow.compile()
+
+# FastAPI setup
+app = FastAPI(title="AI Study Planner API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class GoalRequest(BaseModel):
+    goal: str
+
+@app.post("/generate")
+async def generate_plan(request: GoalRequest):
+    try:
+        state = {
+            "user_input": request.goal,
+            "topics": "",
+            "resources": "",
+            "schedule": "",
+            "final_plan": ""
+        }
+        result = planner_workflow.invoke(state)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 def main():
+    # CLI fallback
     user_input = input("What do you want to learn? ")
     state = {
         "user_input": user_input,
@@ -130,11 +172,15 @@ def main():
         "final_plan": ""
     }
 
-    result = app.invoke(state)
+    result = planner_workflow.invoke(state)
     print("\n==============================")
     print("FINAL STUDY PLAN")
     print("==============================\n")
     print(result["final_plan"])
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "serve":
+        uvicorn.run(app, host="0.0.0.0", port=8000)
+    else:
+        main()
